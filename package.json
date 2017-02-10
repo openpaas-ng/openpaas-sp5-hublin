@@ -38,6 +38,7 @@
     "mongodb": "2.2.10",
     "mongoose": "4.6.0",
     "morgan": "1.7.0",
+    "node-rest-client": "2.0.1",
     "node-uuid": "1.4.7",
     "om-email-invitation": "0.0.4",
     "om-invitation": "0.0.2",

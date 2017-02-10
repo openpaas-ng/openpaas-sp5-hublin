@@ -136,5 +136,7 @@
     "linagora.esn.yjs",
     "om-email-invitation",
     "hublin-easyrtc-connector"
-  ]
+  ],
+
+  "OpenPaasStore": "http://localhost:8080/api"
 }
