@@ -5,6 +5,10 @@ var client = new Client();
 
 // Store the result of the summary module into OpenPaaS Storage
 exports.storeIntoOpenP = function (trans_data) {
+
+    // TODO set actual user data
+    trans_data['users'] = [];
+
 		var args = {
 				path: {},
 				parameters: {},
