@@ -22,7 +22,8 @@ var Meetings = new AwesomeModule('linagora.io.meetings', {
           conferences = require('./webserver/routes/conferences')(dependencies),
           feedback = require('./webserver/routes/feedback')(dependencies),
           i18n = require('./webserver/routes/i18n')(dependencies),
-          errors = require('./webserver/errors')(dependencies);
+          errors = require('./webserver/errors')(dependencies),
+          summaries = require('./webserver/routes/summaries')(dependencies);
 
       return callback(null, {
         api: {
@@ -32,7 +33,8 @@ var Meetings = new AwesomeModule('linagora.io.meetings', {
           home: home,
           feedback: feedback,
           i18n: i18n,
-          errors: errors
+          errors: errors,
+          summaries: summaries
         }
       });
     },
@@ -48,6 +50,7 @@ var Meetings = new AwesomeModule('linagora.io.meetings', {
       webserver.application.use('/', this.api.home);
       webserver.application.use('/', this.api.feedback);
       webserver.application.use('/', this.api.i18n);
+      webserver.application.use('/', this.api.summaries);
 
       webserver.application.use(this.api.errors.logErrors);
       webserver.application.use('/api/*', this.api.errors.apiErrorHandler);
