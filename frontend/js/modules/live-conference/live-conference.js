@@ -335,4 +335,40 @@ function(webRTCService, MAX_RECONNECT_TIMEOUT, $log, $timeout) {
   $scope.getButton = function() {
     return $scope.action.buttons[buttonIndex];
   };
-}]);
+}]).factory('mediaRecorder', function(userService, session){
+
+  var chunks = [];
+  var localMediaRecorder = null;
+
+  return {
+    startRecording: function(mediaStream) {
+
+      var audioStream = new MediaStream(mediaStream.getAudioTracks());
+      localMediaRecorder = new MediaRecorder(audioStream);
+
+      localMediaRecorder.ondataavailable = function(e) {
+        chunks.push(e.data);
+      };
+
+      localMediaRecorder.start();
+    },
+
+    stopRecording: function(callback) {
+
+      if(!localMediaRecorder) {
+        callback();
+      } else {
+        localMediaRecorder.onstop = function() {
+          var blob = new Blob(chunks, { 'type' : 'audio/ogg; codecs=opus' });
+          chunks = [];
+          var reader = new FileReader();
+          reader.readAsDataURL(blob);
+          reader.onload = function(e){
+            callback(e.target.result);
+          };
+        };
+        localMediaRecorder.stop();
+      }
+    }
+  };
+});
