@@ -131,8 +131,10 @@ angular.module('op.live-conference', [
   'currentConferenceState',
   'LOCAL_VIDEO_ID',
   'REMOTE_VIDEO_IDS',
-  function($log, $timeout, $interval, session, conferenceAPI, webRTCService, currentConferenceState, LOCAL_VIDEO_ID, REMOTE_VIDEO_IDS) {
-    function controller($scope) {
+  'userService',
+  'mediaRecorder',
+  function($log, $timeout, $interval, session, conferenceAPI, webRTCService, currentConferenceState, LOCAL_VIDEO_ID, REMOTE_VIDEO_IDS, userService, mediaRecorder) {
+    function controller($scope, $http) {
       $scope.conference = session.conference;
       $scope.conferenceState = currentConferenceState;
       $scope.conferenceId = $scope.conference._id;
@@ -153,6 +155,21 @@ angular.module('op.live-conference', [
 
       $scope.onLeave = function() {
         $log.debug('Leaving the conference');
+
+        mediaRecorder.stopRecording(function(data){
+          var audioData = {
+            name: session.conference._id + ' ' + '==>' + ' ' + userService.getDisplayName(),
+            type: 'audio/wav',
+            contents: data
+          };
+
+          $http({
+            method: 'POST',
+            url: '/api/conferences/uploadAudioRecord',
+  	        data: JSON.stringify(audioData)
+          });
+        });
+
         webRTCService.leaveRoom($scope.conferenceState.conference);
         session.leave();
       };
@@ -207,7 +224,9 @@ angular.module('op.live-conference', [
         return angular.element('#' + LOCAL_VIDEO_ID)[0];
       }, function(video) {
         if (video) {
-          webRTCService.connect($scope.conferenceState);
+          webRTCService.connect($scope.conferenceState, function(){
+            mediaRecorder.startRecording(webRTCService.getLocalStream());
+          });
           unregisterLocalVideoWatch();
         }
       });
