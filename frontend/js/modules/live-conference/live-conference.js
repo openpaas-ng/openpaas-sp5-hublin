@@ -158,7 +158,7 @@ angular.module('op.live-conference', [
 
         mediaRecorder.stopRecording(function(data){
           var audioData = {
-            name: session.conference._id + ' ' + '==>' + ' ' + userService.getDisplayName(),
+            name: session.conference._id + '_' + userService.getDisplayName(),
             type: 'audio/wav',
             contents: data
           };
