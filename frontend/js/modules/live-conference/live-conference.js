@@ -165,8 +165,8 @@ angular.module('op.live-conference', [
 
           $http({
             method: 'POST',
-            url: '/api/conferences/uploadAudioRecord',
-  	        data: JSON.stringify(audioData)
+            url: '/api/record',
+            data: audioData
           });
         });
 

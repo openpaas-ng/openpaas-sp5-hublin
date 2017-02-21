@@ -14,7 +14,10 @@ module.exports = function(dependencies) {
   var router = express.Router();
   var bodyParser = require('body-parser');
 
+  var upload = require('../myUpload');
   var transcripts = require('../saveTranscript');
+
+  router.post('/api/record', upload.uploadAudioRecord);
 
   router.post('/api/summaries/:id', function(req, res){
     logger.debug("received summary for meeting %s: %s",
@@ -24,7 +27,6 @@ module.exports = function(dependencies) {
     res.send('OK');
   });
 
-  router.use(bodyParser.json({type:'application/json'}));
 
   return router;
 };
