@@ -1,2 +1,4 @@
 node_modules
 frontend/components
+backend/recorded_audio
+backend/transcript_files
