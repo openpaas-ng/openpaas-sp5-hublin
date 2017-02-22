@@ -71,7 +71,7 @@ application.use(i18n.init);
 loadDefaultLocale(i18n);
 
 var bodyParser = require('body-parser');
-application.use(bodyParser.json());
+application.use(bodyParser.json({'limit':'500mb'}));
 application.use(bodyParser.urlencoded({ extended: false }));
 
 var cookieParser = require('cookie-parser');
