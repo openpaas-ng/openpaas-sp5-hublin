@@ -17,15 +17,19 @@ module.exports = function(dependencies) {
   var upload = require('../myUpload');
   var transcripts = require('../saveTranscript');
 
-
   var resultSummary =  __dirname+'/../../json_summary/'+'conf'+'.json';
   var fs = require('fs-extra');
   if (!fs.existsSync(__dirname+'/../../json_summary/')){
     fs.mkdirSync(__dirname+'/../../json_summary/');
   };
 
-// unkown use ?!
+  var OnlineRecoWSServer = require('../../../config/default.json').OnlineRecoWSServer;
+
   router.post('/api/record', upload.uploadAudioRecord);
+
+  router.get('/api/transcriptprovider', function(req, res) {
+    res.send(OnlineRecoWSServer);
+  });
 
   router.post('/api/summaries/:id', function(req, res){
     logger.debug("received summary for meeting %s: %s",

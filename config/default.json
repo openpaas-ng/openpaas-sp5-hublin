@@ -142,4 +142,5 @@
   "OpenPaasStore": "http://localhost:8080/api",
   "RecoSummary": "http://localhost:8090/summary",
   "RecoSummaryCallback": "http://localhost:9999/api/summaries"
+  "OnlineRecoWSServer": "ws://localhost:9876"
 }
