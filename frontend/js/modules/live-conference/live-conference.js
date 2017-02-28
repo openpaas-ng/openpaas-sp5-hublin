@@ -133,7 +133,9 @@ angular.module('op.live-conference', [
   'REMOTE_VIDEO_IDS',
   'userService',
   'mediaRecorder',
-  function($log, $timeout, $interval, session, conferenceAPI, webRTCService, currentConferenceState, LOCAL_VIDEO_ID, REMOTE_VIDEO_IDS, userService, mediaRecorder) {
+  'liveTranscriber',
+  'recommendationHandler',
+  function($log, $timeout, $interval, session, conferenceAPI, webRTCService, currentConferenceState, LOCAL_VIDEO_ID, REMOTE_VIDEO_IDS, userService, mediaRecorder, liveTranscriber, recommendationHandler) {
     function controller($scope, $http) {
       $scope.conference = session.conference;
       $scope.conferenceState = currentConferenceState;
@@ -169,6 +171,8 @@ angular.module('op.live-conference', [
             data: audioData
           });
         });
+        liveTranscriber.close();
+        recommendationHandler.clear();
 
         webRTCService.leaveRoom($scope.conferenceState.conference);
         session.leave();
@@ -226,6 +230,13 @@ angular.module('op.live-conference', [
         if (video) {
           webRTCService.connect($scope.conferenceState, function(){
             mediaRecorder.startRecording(webRTCService.getLocalStream());
+            liveTranscriber.open($scope.conferenceId,
+                                 webRTCService.getLocalStream(),
+                                 9000,
+                                 function(msg) {
+                                   recommendationHandler.processRecommendation(msg.data);
+                                   console.log('> ' + userService.getDisplayName() + ': ' + msg.data);
+                                 });
           });
           unregisterLocalVideoWatch();
         }
@@ -247,126 +258,126 @@ angular.module('op.live-conference', [
     };
   }])
 
-.directive('liveConferenceAutoReconnect', ['webRTCService', 'MAX_RECONNECT_TIMEOUT', '$log', '$timeout',
-function(webRTCService, MAX_RECONNECT_TIMEOUT, $log, $timeout) {
-  function link($scope) {
-    webRTCService.addDisconnectCallback(function() {
-      function connect() {
-        webRTCService.connect($scope.conferenceState, function(err) {
-          if (err) {
-            reconnectCount++;
-            reconnect();
-          } else {
-            reconnectCount = 0;
-            $('#disconnectModal').modal('hide');
-          }
-        });
-      }
+  .directive('liveConferenceAutoReconnect', ['webRTCService', 'MAX_RECONNECT_TIMEOUT', '$log', '$timeout',
+                                             function(webRTCService, MAX_RECONNECT_TIMEOUT, $log, $timeout) {
+                                               function link($scope) {
+                                                 webRTCService.addDisconnectCallback(function() {
+                                                   function connect() {
+                                                     webRTCService.connect($scope.conferenceState, function(err) {
+                                                       if (err) {
+                                                         reconnectCount++;
+                                                         reconnect();
+                                                       } else {
+                                                         reconnectCount = 0;
+                                                         $('#disconnectModal').modal('hide');
+                                                       }
+                                                     });
+                                                   }
 
-      function reconnect() {
-        var delay = 1000 << reconnectCount; // jshint ignore:line
+                                                   function reconnect() {
+                                                     var delay = 1000 << reconnectCount; // jshint ignore:line
 
-        if (delay >= MAX_RECONNECT_TIMEOUT) {
-          $scope.toolong = true;
-          delay = MAX_RECONNECT_TIMEOUT;
-        }
-        $log.info('Reconnecting in ' + delay + 'ms');
-        $timeout(connect, delay);
-      }
+                                                     if (delay >= MAX_RECONNECT_TIMEOUT) {
+                                                       $scope.toolong = true;
+                                                       delay = MAX_RECONNECT_TIMEOUT;
+                                                     }
+                                                     $log.info('Reconnecting in ' + delay + 'ms');
+                                                     $timeout(connect, delay);
+                                                   }
 
-      var reconnectCount = 0;
-      $scope.toolong = false;
-      $('#disconnectModal').modal('show');
-      reconnect();
-    });
-  }
+                                                   var reconnectCount = 0;
+                                                   $scope.toolong = false;
+                                                   $('#disconnectModal').modal('show');
+                                                   reconnect();
+                                                 });
+                                               }
 
-  return {
-    retrict: 'A',
-    require: 'liveConference',
-    link: link
-  };
+                                               return {
+                                                 retrict: 'A',
+                                                 require: 'liveConference',
+                                                 link: link
+                                               };
 
-}])
-.directive('liveConferenceNotification', ['$log', 'session', 'notificationFactory', 'livenotification',
-  function($log, session, notificationFactory, livenotification) {
+                                             }])
+  .directive('liveConferenceNotification', ['$log', 'session', 'notificationFactory', 'livenotification',
+                                            function($log, session, notificationFactory, livenotification) {
+                                              return {
+                                                restrict: 'E',
+                                                link: function(scope, element, attrs) {
+                                                  function liveNotificationHandler(msg) {
+                                                    $log.debug('Got a live notification', msg);
+                                                    if (msg.user._id !== session.user._id) {
+                                                      notificationFactory.weakInfo('Conference updated!', msg.message);
+                                                    }
+                                                  }
+
+                                                  var socketIORoom = livenotification('/conferences', attrs.conferenceId)
+                                                    .on('notification', liveNotificationHandler);
+
+                                                  scope.$on('$destroy', function() {
+                                                    socketIORoom.removeListener('notification', liveNotificationHandler);
+                                                  });
+                                                }
+                                              };
+                                            }
+                                           ]).directive('disconnectDialog', ['$window', function($window) {
+                                             return {
+                                               restrict: 'E',
+                                               replace: true,
+                                               templateUrl: '/views/live-conference/partials/disconnect-dialog.html',
+                                               link: function(scope) {
+                                                 scope.reloadPage = function() {
+                                                   $window.location.reload();
+                                                 };
+                                               }
+                                             };
+                                           }])
+  .directive('goodbyePageReminders', ['eventCallbackRegistry', function(eventCallbackRegistry) {
     return {
       restrict: 'E',
-      link: function(scope, element, attrs) {
-        function liveNotificationHandler(msg) {
-          $log.debug('Got a live notification', msg);
-          if (msg.user._id !== session.user._id) {
-            notificationFactory.weakInfo('Conference updated!', msg.message);
-          }
+      replace: true,
+      templateUrl: '/views/live-conference/partials/reminders.html',
+      link: function(scope) {
+        var callbacks = eventCallbackRegistry.conferenceleft;
+
+        if (callbacks && callbacks.length) {
+          scope.conferenceLeftActions = callbacks.map(function(callback) {
+            return callback();
+          }).filter(function(action) {
+            return action && action.buttons;
+          });
         }
-
-        var socketIORoom = livenotification('/conferences', attrs.conferenceId)
-          .on('notification', liveNotificationHandler);
-
-        scope.$on('$destroy', function() {
-          socketIORoom.removeListener('notification', liveNotificationHandler);
-        });
       }
     };
-  }
-]).directive('disconnectDialog', ['$window', function($window) {
-  return {
-    restrict: 'E',
-    replace: true,
-    templateUrl: '/views/live-conference/partials/disconnect-dialog.html',
-    link: function(scope) {
-      scope.reloadPage = function() {
-        $window.location.reload();
-      };
-    }
-  };
-}])
-.directive('goodbyePageReminders', ['eventCallbackRegistry', function(eventCallbackRegistry) {
-  return {
-    restrict: 'E',
-    replace: true,
-    templateUrl: '/views/live-conference/partials/reminders.html',
-    link: function(scope) {
-      var callbacks = eventCallbackRegistry.conferenceleft;
-
-      if (callbacks && callbacks.length) {
-        scope.conferenceLeftActions = callbacks.map(function(callback) {
-          return callback();
-        }).filter(function(action) {
-          return action && action.buttons;
-        });
+  }])
+  .controller('dropDownController', ['$scope', function($scope) {
+    var buttonIndex = 0;
+    $scope.action.buttons.forEach(function(button, index) {
+      if (button.default) {
+        buttonIndex = index;
       }
-    }
-  };
-}])
-.controller('dropDownController', ['$scope', function($scope) {
-  var buttonIndex = 0;
-  $scope.action.buttons.forEach(function(button, index) {
-    if (button.default) {
-      buttonIndex = index;
-    }
-  });
+    });
 
-  $scope.setButton = function(n) {
-    buttonIndex = n;
-    return true;
-  };
-  $scope.getButton = function() {
-    return $scope.action.buttons[buttonIndex];
-  };
-}]).factory('mediaRecorder', function(userService, session){
+    $scope.setButton = function(n) {
+      buttonIndex = n;
+      return true;
+    };
+    $scope.getButton = function() {
+      return $scope.action.buttons[buttonIndex];
+    };
+  }]).factory('mediaRecorder', function(userService, session){
 
-  var chunks = [];
-  var localMediaRecorder = null;
+    var chunks = [];
+    var localMediaRecorder = null;
 
-  return {
-    startRecording: function(mediaStream) {
+    return {
+      startRecording: function(mediaStream) {
 
-      var audioStream = new MediaStream(mediaStream.getAudioTracks());
-      localMediaRecorder = new MediaRecorder(audioStream);
+        var audioStream = new MediaStream(mediaStream.getAudioTracks());
+        localMediaRecorder = new MediaRecorder(audioStream);
 
-      localMediaRecorder.ondataavailable = function(e) {
-        chunks.push(e.data);
+        localMediaRecorder.ondataavailable = function(e) {
+          chunks.push(e.data);
       };
 
       localMediaRecorder.start();
@@ -389,5 +400,128 @@ function(webRTCService, MAX_RECONNECT_TIMEOUT, $log, $timeout) {
         localMediaRecorder.stop();
       }
     }
+  };
+}).factory('liveTranscriber', [ '$log', '$http', function($log, $http) {
+  var recordAtInterval;
+  var myWS;
+  var mediaRecorder;
+  var chunks = [];
+  var confId;
+  var recordInterval;
+  var pause = false;
+
+  function sendAudioToServer(){
+    if(chunks.length > 0){
+      var blob = new Blob(chunks,
+                          { 'type' : 'audio/ogg; codecs=opus' });
+      chunks = [];
+
+      var reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onload = function(e){
+        myWS.send(JSON.stringify({confId: confId, type: 'audioData', audioContent: e.target.result}));
+        $log.debug('online reco: sent data to provider');
+      };
+    }
   }
-});
+
+  function recordLoop() {
+    recordAtInterval = window.setInterval(function(){
+      mediaRecorder.stop();
+      if(!pause) {
+        mediaRecorder.start();
+      }
+    }, recordInterval);
+  }
+
+  function processAudio(stream, interval) {
+    mediaRecorder = new MediaRecorder(stream);
+    recordInterval = interval;
+
+    mediaRecorder.ondataavailable = function(e) {
+      chunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = function(e) {
+      sendAudioToServer();
+    };
+
+    mediaRecorder.start();
+    $log.debug('online reco: started recording');
+
+    recordLoop();
+  }
+
+  return {
+    open: function(conferenceId, mediaStream, interval, callback) {
+      confId = conferenceId;
+      $http({
+        method: 'GET',
+        url: '/api/transcriptprovider'
+      }).then(function(providerurl){
+        $log.debug('online reco: opening socket to provider');
+        myWS = new WebSocket(providerurl.data);
+        myWS.onopen = function(e) {
+          myWS.send(JSON.stringify({confId: confId, type: 'register'}));
+        };
+        myWS.onmessage = function(e) {
+          $log.debug('online reco: received %j', e);
+          callback(e);
+        };
+        processAudio(mediaStream, interval);
+      });
+    },
+    pause: function() {
+      pause = true;
+      $log.debug('online reco: paused recording');
+    },
+    resume: function() {
+      pause = false;
+      $log.debug('online reco: resumed recording');
+      recordLoop();
+    },
+    close: function() {
+      clearInterval(recordAtInterval);
+      mediaRecorder.stop();
+      if(mediaRecorder.stream.stop){
+        mediaRecorder.stream.stop();
+      }
+      myWS.close();
+      $log.debug('online reco: closed conenction to provider');
+    }
+  };
+}]).factory('recommendationHandler', [ '$log', 'notificationService', function($log, notificationService){
+  var stack_bar_bottom = {
+    "dir1": "up",
+    "dir2": "right",
+    "spacing1": 0,
+    "spacing2": 0
+  };
+  var currentNotification = null;
+  return {
+    processRecommendation: function(recommendation) {
+      if(currentNotification !== null) {
+        currentNotification.remove();
+      }
+      currentNotification = notificationService.notify({
+        title: 'Recommendation',
+        text: JSON.stringify(recommendation),
+        type: 'info',
+        hide: false,
+        nonblock: {
+          nonblock: true
+        },
+        addclass: "stack-bar-bottom",
+        cornerclass: "",
+        width: "70%",
+        stack: stack_bar_bottom,
+        styling: 'fontawesome'
+      });
+    },
+    clear: function() {
+      if(currentNotification !== null) {
+        currentNotification.remove();
+      }
+    }
+  };
+}]);
