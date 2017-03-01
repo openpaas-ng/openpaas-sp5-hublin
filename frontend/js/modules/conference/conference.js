@@ -1,7 +1,7 @@
 'use strict';
 
 
-angular.module('meetings.conference', ['meetings.user', 'meetings.uri', 'meetings.session', 'restangular'])
+angular.module('meetings.conference', ['meetings.user', 'meetings.uri', 'meetings.session', 'restangular', 'mgcrea.ngStrap.modal'])
   .run(function(conferenceUserMediaInterceptorService) {
     conferenceUserMediaInterceptorService();
   })
@@ -200,7 +200,48 @@ angular.module('meetings.conference', ['meetings.user', 'meetings.uri', 'meeting
     $scope.reopen = function() {
       $window.location.href = '/' + session.conference._id + '?displayName=' + session.user.displayName;
     };
-  }]).directive('usernameForm', [function() {
+  }])
+  .controller('displaySummaryController', ['$scope', '$window', '$http', function($scope, $window, $http){
+     console.log("controller display summary");
+     $scope.summaryKeywords = '';
+     $scope.showKeywords = false;
+
+
+     $scope.showKeywordsFunc = function(){
+       console.log('button display');
+        $http({
+          method: 'GET',
+          url: '/api/summaries/'
+        })
+        .then(function successCallback(response) {
+          console.log(response);
+           // this callback will be called asynchronously
+           console.log("summary content: ",response);
+           // when the response is available
+           $scope.summaryKeywords = response.data[0];
+           console.group()
+          //  console.log('$scope.summaryKeywords[0]')
+          //  console.log($scope.summaryKeywords[0])
+           console.log('$scope.summaryKeywords')
+           console.log($scope.summaryKeywords)
+           console.groupEnd()
+
+          //  $window.alert($scope.summaryKeywords[0]);
+           //alert(JSON.stringify(response.data));
+
+           $scope.showKeywords = !$scope.showKeywords;
+
+         }, function errorCallback(response) {
+           // called asynchronously if an error occurs
+           // or server returns response with an error status.
+           console.log('server failed')
+         });
+     }
+
+
+       //$scope.summaryKeywords = JSON.parse(summaryKeywords);
+  }])
+  .directive('usernameForm', [function() {
     return {
       restrict: 'E',
       templateUrl: '/views/modules/live-conference/username-form.html'

@@ -8,10 +8,33 @@ section.goodbye
         p
           span #{__('Did you enjoy the experience? Spread the word!')}
           include ../../commons/socialshare
+          
         p
-          button.btn.btn-xl(type='button', ng-click='reopen()') #{__('Reopen the room')}
+          div(ng-controller='displaySummaryController')
+            button.btn.btn-lg.btn-primary(type='button', ng-click='showKeywordsFunc()') #{__('Summary & keywords')}
+            h1.list-group-item-heading
+             |  {{summaryKeywords.text}}
+            div(ng-repeat='keyword in summaryKeywords.keywords')
+              | Key : {{ keyword.key }}
+            Users :
+            div(ng-repeat='user in summaryKeywords.user')
+              | User : {{ user }}
+              
+          //- button.btn.btn-lg.btn-primary(type='button',ng-click='showKeywordsFunc()', data-placement='center', bs-modal='modal')
+          //-   | Summary and keywords
+          //-   {{summaryKeywords.text}}
+          
+          //-  .list-group(ng-if ='showKeywords')
+          //-   .list-group-item(ng-repeat='item in summaryKeywords')
+            //-  h2.list-group-item-heading(ng-repeat='item in item.summaryKeywords') {{item.text}}
+            //-  p.list-group-item-text(ng-repeat='words in keywords.summaryKeywords') {{words.keywords}}
+            //-  P.list-group-item-text(ng-repeat='use in users.summaryKeywords') {{use.users}}
+
+        p
+          button.btn.btn-lg.btn-primary(type='button', ng-click='reopen()') #{__('Reopen the room')}
         p
           span #{__('or create a new one')}
           conference-create-form
       .modal-footer
         include ../../commons/whatis
+        
