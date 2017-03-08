@@ -87,7 +87,6 @@ exports.uploadAudioRecord = function(req, res){
           var txtFile = trans_folder+audioName+'.json';
           outputContent =  "[" + outputContent + "]";
           fs.writeFileSync(txtFile, outputContent);
-
           sendTranscript.send_transcript(JSON.parse(outputContent));
         };
         ws.onerror = function (event) {

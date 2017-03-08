@@ -30,7 +30,7 @@ module.exports = function(dependencies) {
     logger.debug("received summary for meeting %s: %s",
                  req.params['id'], req.body);
 
-    fs.writeFile(resultSummary, req.body);
+    fs.writeFileSync(resultSummary, JSON.stringify(req.body));
     transcripts.storeIntoOpenP(req.body);
 
 
@@ -40,8 +40,8 @@ module.exports = function(dependencies) {
 
   //router to send summary data from backend to frontend
   router.get('/api/summaries/', function(req, res){
-    console.log(__dirname+'/../../json_summary.json');
-    fs.readFile(__dirname+'/../../json_summary.json', 'utf8',function(err,result){
+    console.log("#################");
+    fs.readFile(__dirname+'/../../json_summary/json_summary.json', 'utf8',function(err,result){
       if (err){
         console.log('failed');
         return res.send(404);

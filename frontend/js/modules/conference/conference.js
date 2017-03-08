@@ -219,17 +219,30 @@ angular.module('meetings.conference', ['meetings.user', 'meetings.uri', 'meeting
            console.log("summary content: ",response);
            // when the response is available
            $scope.summaryKeywords = response.data[0];
+          //  $scope.selects: $scope.summaryKeywords;
+          //  $scope.modal = {
+          //    title: "Summary & Keywords",
+          //    content: $scope.summaryKeywords
+          //  };
            console.group()
           //  console.log('$scope.summaryKeywords[0]')
           //  console.log($scope.summaryKeywords[0])
            console.log('$scope.summaryKeywords')
            console.log($scope.summaryKeywords)
-           console.groupEnd()
 
-          //  $window.alert($scope.summaryKeywords[0]);
-           //alert(JSON.stringify(response.data));
+         var keyStr = '';
+         var curKey;
+         for (curKey in $scope.summaryKeywords.keywords){
+            keyStr = keyStr+' --'+$scope.summaryKeywords.keywords[curKey].key;
+          }
+            console.log(keyStr);
+          $scope.keyStr = keyStr;
 
-           $scope.showKeywords = !$scope.showKeywords;
+
+
+          $scope.showKeywords = !$scope.showKeywords;
+          // $window.alert(JSON.stringify($scope.summaryKeywords));
+
 
          }, function errorCallback(response) {
            // called asynchronously if an error occurs

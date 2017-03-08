@@ -11,15 +11,29 @@ section.goodbye
           
         p
           div(ng-controller='displaySummaryController')
-            button.btn.btn-lg.btn-primary(type='button', ng-click='showKeywordsFunc()') #{__('Summary & keywords')}
-            h1.list-group-item-heading
-             |  {{summaryKeywords.text}}
-            div(ng-repeat='keyword in summaryKeywords.keywords')
-              | Key : {{ keyword.key }}
-            Users :
-            div(ng-repeat='user in summaryKeywords.user')
-              | User : {{ user }}
-              
+            button.btn.btn-lg.btn-primary(type='button', ng-click='showKeywordsFunc()' ) #{__('Summary & Keywords')}
+            .list-group
+              .list-group-item-success 
+                strong {{summaryKeywords.text}}                
+              p
+              .list-group-item-info
+                strong Keywords: 
+                | {{keyStr}} 
+
+                
+            //- button.btn.btn-lg.btn-primary(type='button', ng-click='showKeywordsFunc(keyStr)' ) #{__('Keywords')}
+
+            //- button.btn.btn-lg.btn-primary(type='button', ng-click='showKeywordsFunc()' ) #{__('Users')}
+            //- .list-group
+            //-   .list-group-item-warning
+            //-     | {{ user }}
+            //- h1.list-group-item-heading
+            //-   | {{summaryKeywords.text}}
+            //- 
+            //-   p  Keywords : {{keyStr}}
+            //- div(ng-repeat='user in summaryKeywords.user')
+            //-   | User : {{ user }}
+          //- select.span2(ng-model='selectedItem', ng-options='value.id as value.name for (key, value) in selects', data-style='btn-primary', bs-select='')
           //- button.btn.btn-lg.btn-primary(type='button',ng-click='showKeywordsFunc()', data-placement='center', bs-modal='modal')
           //-   | Summary and keywords
           //-   {{summaryKeywords.text}}

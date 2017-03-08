@@ -389,5 +389,5 @@ function(webRTCService, MAX_RECONNECT_TIMEOUT, $log, $timeout) {
         localMediaRecorder.stop();
       }
     }
-  };
+  }
 });
