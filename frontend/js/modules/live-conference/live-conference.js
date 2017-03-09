@@ -500,23 +500,42 @@ angular.module('op.live-conference', [
   var currentNotification = null;
   return {
     processRecommendation: function(recommendation) {
-      if(currentNotification !== null) {
-        currentNotification.remove();
+
+      var notif_content = '';
+
+      recommendation = JSON.parse(recommendation);
+      notif_content += '<h5>keywords</h5> ';
+      for (var keyword in recommendation.keywords) {
+        notif_content += keyword + ', ';
       }
-      currentNotification = notificationService.notify({
-        title: 'Recommendation',
-        text: JSON.stringify(recommendation),
-        type: 'info',
-        hide: false,
-        nonblock: {
-          nonblock: true
-        },
-        addclass: "stack-bar-bottom",
-        cornerclass: "",
-        width: "70%",
-        stack: stack_bar_bottom,
-        styling: 'fontawesome'
-      });
+      // remove last ', '
+      notif_content = notif_content.substring(0, notif_content.length - 2);
+
+      if(recommendation.soArticles && recommendation.soArticles.length > 0) {
+        notif_content += '<h5>Recommendations</h5>';
+        var articles = recommendation.soArticles;
+        for(var i = 0; i < articles.length && i < 5; i++) {
+          notif_content += '<p><a href=\'' + recommendation.soArticles[i].link + '\' target=\'_blank\'>' + recommendation.soArticles[i].title + '</a>'; 
+        }
+      }
+
+      // update existing notification if it exists and is still open
+      // otherwise create a new notification
+      if(currentNotification !== null && currentNotification.state != 'closed') {
+        currentNotification.update(notif_content);
+      } else {
+        currentNotification = notificationService.notify({
+          title: 'Recommendations',
+          text: notif_content,
+          type: 'info',
+          hide: false,
+          addclass: "stack-bar-bottom",
+          cornerclass: "",
+          width: "30%",
+          stack: stack_bar_bottom,
+          styling: 'fontawesome'
+        });
+      }
     },
     clear: function() {
       if(currentNotification !== null) {
