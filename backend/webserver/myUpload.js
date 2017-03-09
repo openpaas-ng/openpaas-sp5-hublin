@@ -62,6 +62,8 @@ exports.uploadAudioRecord = function(req, res){
           return;
         }
 
+        var speaker = audioName.split('_')[1];
+
         // Opening socket to start transcription
         var W3CWebSocket = require('websocket').w3cwebsocket;
         var ws = new W3CWebSocket(KaldiGstreamerURL + "/client/ws/speech");
@@ -97,18 +99,29 @@ exports.uploadAudioRecord = function(req, res){
           console.info('ws to stt module error: ' + event);
         };
 
+        var nbSegment = 0;
         ws.onmessage = function (event) {
           console.log(event.data);
           var hyp = JSON.parse(event.data);
-          if (hyp["result"]!= undefined && hyp["segment-start"] != undefined){
+          if (hyp["result"]!= undefined && hyp["result"]["final"]){
             var trans = ((hyp["result"]["hypotheses"])[0])["transcript"];
-            if (hyp["result"]["final"]){
-              var end = parseFloat(hyp["segment-start"])+parseFloat(hyp["segment-length"]);
-              var start = JSON.parse(hyp["segment-start"]);
-              if (outputContent !== "")
-                outputContent = outputContent + ',\n';
-              outputContent += "{"+"\""+"from"+"\""+": "+start+", "+"\""+"until"+"\""+": "+end+", "+"\""+"speaker"+"\""+": "+"\""+audioName+"\""+", "+"\""+"text"+"\": \""+trans+"\""+"}";
+
+            var start;
+            var end;
+            if(hyp["segment-start"] && hyp["segment-length"]) {
+              start = JSON.parse(hyp["segment-start"]);
+              end = parseFloat(hyp["segment-start"])+parseFloat(hyp["segment-length"]);
+            } else {
+              start = nbSegment; // TODO set the actual start
+              end = nbSegment + 1; // TODO set the actual duration
             }
+
+            if (outputContent !== "") {
+              outputContent = outputContent + ',\n';
+            }
+            outputContent += "{"+"\""+"from"+"\""+": "+start+", "+"\""+"until"+"\""+": "+end+", "+"\""+"speaker"+"\""+": "+"\""+speaker+"\""+", "+"\""+"text"+"\": \""+trans+"\""+"}";
+
+            nbSegment += 1;
           }
         };
       });
