@@ -76,18 +76,22 @@ exports.uploadAudioRecord = function(req, res){
         ws.onclose = function (event) {
           console.info('ws to stt module closed');
           var fs = require('fs-extra');
-
+          var TimSort = require('timsort');
           var trans_folder = __dirname+'/../transcript_files/';
-
           // create directory if it does not exists
           if (!fs.existsSync(trans_folder)){
             fs.mkdirSync(trans_folder);
           };
 
           var txtFile = trans_folder+audioName+'.json';
-          outputContent =  "[" + outputContent + "]";
-          fs.writeFileSync(txtFile, outputContent);
-          sendTranscript.send_transcript(JSON.parse(outputContent));
+          // outputContent =  "[" + outputContent + "]";
+          // fs.writeFileSync(txtFile, outputContent);
+          // sendTranscript.send_transcript(JSON.parse(outputContent));
+
+          // Saving a transcription file without using Kaldi
+          var txtDeb = trans_folder+'39_45_eva_14_microsoft.json';
+          fs.writeFileSync(txtFile, fs.readFileSync(txtDeb, 'utf8'));
+          sendTranscript.send_transcript(JSON.parse(fs.readFileSync(txtDeb, 'utf8')));
         };
         ws.onerror = function (event) {
           console.info('ws to stt module error: ' + event);
