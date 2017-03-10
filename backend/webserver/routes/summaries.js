@@ -10,6 +10,7 @@ var express = require('express');
 module.exports = function(dependencies) {
 
   var logger = dependencies('logger');
+  var wsserver = dependencies('wsserver');
 
   var router = express.Router();
   var bodyParser = require('body-parser');
@@ -36,6 +37,11 @@ module.exports = function(dependencies) {
 
     var resultSummary =  __dirname+'/../../json_summary/'+req.params['id']+'.json';
     fs.writeFileSync(resultSummary, JSON.stringify(req.body));
+
+    // notify room participants that summary is ready
+    var confId = req.params['id'];
+    wsserver.server.io.of('/reco').emit('summary', {confId: confId, data: req.body});
+
     transcripts.storeIntoOpenP(req.body);
 
 

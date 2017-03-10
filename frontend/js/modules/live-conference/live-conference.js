@@ -135,8 +135,9 @@ angular.module('op.live-conference', [
   'mediaRecorder',
   'liveTranscriber',
   'recommendationHandler',
-  function($log, $timeout, $interval, session, conferenceAPI, webRTCService, currentConferenceState, LOCAL_VIDEO_ID, REMOTE_VIDEO_IDS, userService, mediaRecorder, liveTranscriber, recommendationHandler) {
-    function controller($scope, $http) {
+  'summaryNotifier',
+  function($log, $timeout, $interval, session, conferenceAPI, webRTCService, currentConferenceState, LOCAL_VIDEO_ID, REMOTE_VIDEO_IDS, userService, mediaRecorder, liveTranscriber, recommendationHandler, summaryNotifier) {
+    function controller($rootScope, $scope, $http) {
       $scope.conference = session.conference;
       $scope.conferenceState = currentConferenceState;
       $scope.conferenceId = $scope.conference._id;
@@ -173,6 +174,20 @@ angular.module('op.live-conference', [
         });
         liveTranscriber.close();
         recommendationHandler.clear();
+
+        if(!$rootScope.summaries){
+          $rootScope.summaries = {};
+        }
+        $rootScope.summaries[session.conference._id] = {
+          showKeywords: false
+        };
+        summaryNotifier.start(session.conference._id, function(msg){
+          console.log('received summary notif %j', msg);
+          summaryNotifier.stop();
+
+          $rootScope.summaries[session.conference._id].summaryKeywords = msg.data;
+          $rootScope.summaries[session.conference._id].showKeywords = true;
+        });
 
         webRTCService.leaveRoom($scope.conferenceState.conference);
         session.leave();
@@ -541,6 +556,28 @@ angular.module('op.live-conference', [
       if(currentNotification !== null) {
         currentNotification.remove();
       }
+    }
+  };
+}]).factory('summaryNotifier', ['$log', 'livenotification', function($log, livenotification) {
+
+  var socketIORoom;
+  var handler
+
+  return {
+    start: function(confId, callback){
+
+      handler = function(msg) {
+        // TODO proper room handling
+        if(msg.confId == confId){
+          callback(msg);
+        }
+      };
+
+      socketIORoom = livenotification('/reco')
+        .on('summary', handler);
+    } ,
+    stop: function() {
+      socketIORoom.removeListener('summary', handler);
     }
   };
 }]);

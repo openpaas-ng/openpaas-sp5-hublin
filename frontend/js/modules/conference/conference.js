@@ -201,10 +201,31 @@ angular.module('meetings.conference', ['meetings.user', 'meetings.uri', 'meeting
       $window.location.href = '/' + session.conference._id + '?displayName=' + session.user.displayName;
     };
   }])
-  .controller('displaySummaryController', ['$scope', '$window', '$http', 'session', function($scope, $window, $http, session){
-    console.log("controller display summary");
+  .controller('displaySummaryController', ['$rootScope', '$scope', '$window', '$http', 'session', function($rootScope, $scope, $window, $http, session){
     $scope.summaryKeywords = '';
     $scope.showKeywords = false;
+
+    function updateSummary(){
+      $scope.showKeywords = true;
+      $scope.summaryKeywords = $rootScope.summaries[session.conference._id].summaryKeywords;
+
+      var keyStr = '';
+      var curKey;
+      for (curKey in $scope.summaryKeywords.keywords){
+        keyStr = keyStr+$scope.summaryKeywords.keywords[curKey].key+' - ';
+      }
+      $scope.keyStr = keyStr.substring(0, keyStr.length -3);
+    }
+
+    if($rootScope.summaries[session.conference._id].showKeywords) {
+      updateSummary();
+    } else {
+      $rootScope.$watch('summaries' , function(newValue){
+        if(newValue[session.conference._id].showKeywords == true){
+          updateSummary();
+        }
+      }, true);
+    }
 
     $scope.showKeywordsFunc = function(){
       console.log('button display');

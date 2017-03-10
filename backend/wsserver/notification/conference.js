@@ -9,6 +9,8 @@ var NOTIFICATION_EVENT = 'notification';
 var JOINER_TOPIC = 'conference:join';
 var LEAVER_TOPIC = 'conference:leave';
 
+var NAMESPACE_RECO = '/reco';
+
 /**
  * @param {Function} dependencies
  * @return {{init: init}}
@@ -79,6 +81,8 @@ module.exports = function(dependencies) {
           socket.leave(uuid);
         });
       });
+
+    io.of(NAMESPACE_RECO);
 
     initialized = true;
   }
