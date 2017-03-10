@@ -11,7 +11,7 @@ section.goodbye
           
         p 
           div(ng-controller='displaySummaryController')
-            button.btn.btn-lg.btn-primary(type='button', ng-show="showKeywords === false", ng-click='showKeywordsFunc()')
+            button.btn.btn-lg.btn-primary(type='button', ng-show="showKeywords === false")
               img(src="images/loading_spinner.gif", ng-show="showKeywords === false", height=30, width=30)
               | #{__('Processing audio...')}
             #accordion.panel-group(role='tablist', aria-multiselectable='true', ng-show="showKeywords === true")

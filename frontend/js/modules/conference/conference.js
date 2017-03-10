@@ -226,28 +226,6 @@ angular.module('meetings.conference', ['meetings.user', 'meetings.uri', 'meeting
         }
       }, true);
     }
-
-    $scope.showKeywordsFunc = function(){
-      console.log('button display');
-      $http({
-        method: 'GET',
-        url: '/api/summaries/' + session.conference._id
-      })
-        .then(function successCallback(response) {
-          $scope.summaryKeywords = response.data;
-
-          var keyStr = '';
-          var curKey;
-          for (curKey in $scope.summaryKeywords.keywords){
-            keyStr = keyStr+$scope.summaryKeywords.keywords[curKey].key+' - ';
-          }
-          keyStr = keyStr.substring(0, keyStr.length -3);
-          $scope.keyStr = keyStr;
-          $scope.showKeywords = true;
-        }, function errorCallback(response) {
-          console.log('server failed');
-        });
-    };
   }])
   .directive('usernameForm', [function() {
     return {
