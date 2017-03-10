@@ -222,7 +222,7 @@ angular.module('meetings.conference', ['meetings.user', 'meetings.uri', 'meeting
           }
           keyStr = keyStr.substring(0, keyStr.length -3);
           $scope.keyStr = keyStr;
-          $scope.showKeywords = !$scope.showKeywords;
+          $scope.showKeywords = true;
         }, function errorCallback(response) {
           console.log('server failed');
         });
