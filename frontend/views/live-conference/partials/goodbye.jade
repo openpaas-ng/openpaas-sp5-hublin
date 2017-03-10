@@ -9,13 +9,17 @@ section.goodbye
           span #{__('Did you enjoy the experience? Spread the word!')}
           include ../../commons/socialshare
           
-        p
+        p 
           div(ng-controller='displaySummaryController')
-            #accordion.panel-group(role='tablist', aria-multiselectable='true')
+            button.btn.btn-lg.btn-primary(type='button', ng-show="showKeywords === false", ng-click='showKeywordsFunc()')
+              img(src="images/loading_spinner.gif", ng-show="showKeywords === false", height=30, width=30)
+              | #{__('Processing audio...')}
+            #accordion.panel-group(role='tablist', aria-multiselectable='true', ng-show="showKeywords === true")
               .panel.panel-default
                 #headingOne.panel-heading(role='tab')
                   h4.panel-title
-                    a.collapsed(role='button', data-toggle='collapse', data-parent='#accordion', href='#collapseOne', aria-expanded='true', aria-controls='collapseOne', ng-click='showKeywordsFunc()')
+                    a.collapsed(role='button', data-toggle='collapse', data-parent='#accordion', 
+                    href='#collapseOne', aria-expanded='true', aria-controls='collapseOne', ng-click='showKeywordsFunc()')
                       | Show Summary & Keywords
                 #collapseOne.panel-collapse.collapse(role='tabpanel', aria-labelledby='headingOne')
                   .panel-body
@@ -33,4 +37,3 @@ section.goodbye
           conference-create-form
       .modal-footer
         include ../../commons/whatis
-        
