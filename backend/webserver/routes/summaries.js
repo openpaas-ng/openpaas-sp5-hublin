@@ -24,6 +24,7 @@ module.exports = function(dependencies) {
     fs.mkdirSync(__dirname+'/../../json_summary/');
   };
 
+// unkown use ?!
   router.post('/api/record', upload.uploadAudioRecord);
 
   router.post('/api/summaries/:id', function(req, res){
@@ -40,8 +41,8 @@ module.exports = function(dependencies) {
 
   //router to send summary data from backend to frontend
   router.get('/api/summaries/', function(req, res){
-    console.log("#################");
-    fs.readFile(__dirname+'/../../json_summary/json_summary.json', 'utf8',function(err,result){
+
+    fs.readFile(__dirname+'/../../json_summary/conf.json', 'utf8',function(err,result){
       if (err){
         console.log('failed');
         return res.send(404);
