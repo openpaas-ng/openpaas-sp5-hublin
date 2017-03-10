@@ -62,6 +62,7 @@ exports.uploadAudioRecord = function(req, res){
           return;
         }
 
+        var confId = audioName.split('_')[0];
         var speaker = audioName.split('_')[1];
 
         // Opening socket to start transcription
@@ -88,12 +89,12 @@ exports.uploadAudioRecord = function(req, res){
           var txtFile = trans_folder+audioName+'.json';
           // outputContent =  "[" + outputContent + "]";
           // fs.writeFileSync(txtFile, outputContent);
-          // sendTranscript.send_transcript(JSON.parse(outputContent));
+          // sendTranscript.send_transcript(confId, JSON.parse(outputContent));
 
           // Saving a transcription file without using Kaldi
           var txtDeb = trans_folder+'39_45_eva_14_microsoft.json';
           fs.writeFileSync(txtFile, fs.readFileSync(txtDeb, 'utf8'));
-          sendTranscript.send_transcript(JSON.parse(fs.readFileSync(txtDeb, 'utf8')));
+          sendTranscript.send_transcript(confId, JSON.parse(fs.readFileSync(txtDeb, 'utf8')));
         };
         ws.onerror = function (event) {
           console.info('ws to stt module error: ' + event);

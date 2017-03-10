@@ -7,13 +7,11 @@ var Client = require('node-rest-client').Client;
 var client = new Client();
 
 // Send transcription from HublIn to recommender summary
-exports.send_transcript = function(data) {
+exports.send_transcript = function(meeting_id, data) {
 
 		var trans_data = {};
 		trans_data["entries"] = data;
 
-		// TODO: fix hardcoded meeting id
-		var meeting_id = 1;
 		var args = {
 				path: {},
 			parameters: {"id": meeting_id, "callbackurl": RecoSummaryCallback + '/' + meeting_id},
