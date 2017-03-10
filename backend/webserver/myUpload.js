@@ -1,5 +1,10 @@
+var sendTranscript = require('./sendTranscript');
+var Client = require('node-rest-client').Client;
+var client = new Client();
 
 var KaldiGstreamerURL = require('../../config/default.json').KaldiGstreamerURL;
+var useExternalTranscriptBackend = require('../../config/default.json').useExternalTranscriptBackend;
+var externalTranscriptBackend = require('../../config/default.json').externalTranscriptBackend;
 
 exports.uploadAudioRecord = function(req, res){
   var fs = require('fs-extra');
@@ -31,6 +36,31 @@ exports.uploadAudioRecord = function(req, res){
   };
   // Preparing files to the transcription step
   function sendRequest(file, callback){
+    if(!useExternalTranscriptBackend) {
+      sendRequest_internal(file, callback);
+    } else {
+      sendRequest_external(file, callback);
+    }
+  };
+
+  function sendRequest_external(file, callback){
+    var confId = audioName.split('_')[0];
+		var args = {
+			path: {},
+			parameters: {},
+			headers: { "Content-Type": "application/json" }
+		};
+		client.registerMethod("getTranscript", externalTranscriptBackend+ "/api/transcripts/" + confId , "GET");
+
+		client.methods.getTranscript(args, function (data, response) {
+      var trans_folder = __dirname+'/../transcript_files/';
+      var txtFile = trans_folder+ '/' + audioName + '.json';
+      fs.writeFileSync(txtFile, data);
+      sendTranscript.send_transcript(confId, JSON.parse(data));
+		});
+  }
+
+  function sendRequest_internal(file, callback){
 
     var ffmpeg = require('fluent-ffmpeg');
     var fs = require('fs-extra');
@@ -55,7 +85,6 @@ exports.uploadAudioRecord = function(req, res){
 
     // Sending audio files to kaldi server
     function transcribeClip(clip, done) {
-      var sendTranscript = require('./sendTranscript');
       fs.readFile(clip, function (err, data) {
         if (err) {
           done(err);
