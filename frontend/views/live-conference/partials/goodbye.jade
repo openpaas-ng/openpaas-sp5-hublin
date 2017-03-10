@@ -11,39 +11,21 @@ section.goodbye
           
         p
           div(ng-controller='displaySummaryController')
-            button.btn.btn-lg.btn-primary(type='button', ng-click='showKeywordsFunc()' ) #{__('Summary & Keywords')}
-            .list-group
-              .list-group-item-success 
-                strong {{summaryKeywords.text}}                
-              p
-              .list-group-item-info
-                strong Keywords: 
-                | {{keyStr}} 
-
-                
-            //- button.btn.btn-lg.btn-primary(type='button', ng-click='showKeywordsFunc(keyStr)' ) #{__('Keywords')}
-
-            //- button.btn.btn-lg.btn-primary(type='button', ng-click='showKeywordsFunc()' ) #{__('Users')}
-            //- .list-group
-            //-   .list-group-item-warning
-            //-     | {{ user }}
-            //- h1.list-group-item-heading
-            //-   | {{summaryKeywords.text}}
-            //- 
-            //-   p  Keywords : {{keyStr}}
-            //- div(ng-repeat='user in summaryKeywords.user')
-            //-   | User : {{ user }}
-          //- select.span2(ng-model='selectedItem', ng-options='value.id as value.name for (key, value) in selects', data-style='btn-primary', bs-select='')
-          //- button.btn.btn-lg.btn-primary(type='button',ng-click='showKeywordsFunc()', data-placement='center', bs-modal='modal')
-          //-   | Summary and keywords
-          //-   {{summaryKeywords.text}}
-          
-          //-  .list-group(ng-if ='showKeywords')
-          //-   .list-group-item(ng-repeat='item in summaryKeywords')
-            //-  h2.list-group-item-heading(ng-repeat='item in item.summaryKeywords') {{item.text}}
-            //-  p.list-group-item-text(ng-repeat='words in keywords.summaryKeywords') {{words.keywords}}
-            //-  P.list-group-item-text(ng-repeat='use in users.summaryKeywords') {{use.users}}
-
+            #accordion.panel-group(role='tablist', aria-multiselectable='true')
+              .panel.panel-default
+                #headingOne.panel-heading(role='tab')
+                  h4.panel-title
+                    a.collapsed(role='button', data-toggle='collapse', data-parent='#accordion', href='#collapseOne', aria-expanded='true', aria-controls='collapseOne', ng-click='showKeywordsFunc()')
+                      | Show Summary & Keywords
+                #collapseOne.panel-collapse.collapse(role='tabpanel', aria-labelledby='headingOne')
+                  .panel-body
+                    .list-group
+                      .list-group-item-info
+                        strong Keywords:
+                        | {{keyStr}}
+                      .list-group-item-success
+                        strong  Summary:
+                        | {{summaryKeywords.text}}
         p
           button.btn.btn-lg.btn-primary(type='button', ng-click='reopen()') #{__('Reopen the room')}
         p
