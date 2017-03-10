@@ -25,11 +25,13 @@ section.goodbye
                   .panel-body
                     .list-group
                       .list-group-item-info
-                        strong Keywords:
-                        | {{keyStr}}
+                        strong Keywords
+                        br
+                        {{keyStr}}
                       .list-group-item-success
-                        strong  Summary:
-                        | {{summaryKeywords.text}}
+                        strong  Summary
+                        br
+                        {{summaryKeywords.text}}
         p
           button.btn.btn-lg.btn-primary(type='button', ng-click='reopen()') #{__('Reopen the room')}
         p

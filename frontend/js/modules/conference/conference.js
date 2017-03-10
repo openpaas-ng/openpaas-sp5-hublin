@@ -201,58 +201,32 @@ angular.module('meetings.conference', ['meetings.user', 'meetings.uri', 'meeting
       $window.location.href = '/' + session.conference._id + '?displayName=' + session.user.displayName;
     };
   }])
-  .controller('displaySummaryController', ['$scope', '$window', '$http', function($scope, $window, $http){
-     console.log("controller display summary");
-     $scope.summaryKeywords = '';
-     $scope.showKeywords = false;
+  .controller('displaySummaryController', ['$scope', '$window', '$http', 'session', function($scope, $window, $http, session){
+    console.log("controller display summary");
+    $scope.summaryKeywords = '';
+    $scope.showKeywords = false;
 
-
-     $scope.showKeywordsFunc = function(){
-       console.log('button display');
-        $http({
-          method: 'GET',
-          url: '/api/summaries/'
-        })
+    $scope.showKeywordsFunc = function(){
+      console.log('button display');
+      $http({
+        method: 'GET',
+        url: '/api/summaries/' + session.conference._id
+      })
         .then(function successCallback(response) {
-          console.log(response);
-           // this callback will be called asynchronously
-           console.log("summary content: ",response);
-           // when the response is available
-           $scope.summaryKeywords = response.data[0];
-          //  $scope.selects: $scope.summaryKeywords;
-          //  $scope.modal = {
-          //    title: "Summary & Keywords",
-          //    content: $scope.summaryKeywords
-          //  };
-           console.group()
-          //  console.log('$scope.summaryKeywords[0]')
-          //  console.log($scope.summaryKeywords[0])
-           console.log('$scope.summaryKeywords')
-           console.log($scope.summaryKeywords)
+          $scope.summaryKeywords = response.data;
 
-         var keyStr = '';
-         var curKey;
-         for (curKey in $scope.summaryKeywords.keywords){
-            keyStr = keyStr+' --'+$scope.summaryKeywords.keywords[curKey].key;
+          var keyStr = '';
+          var curKey;
+          for (curKey in $scope.summaryKeywords.keywords){
+            keyStr = keyStr+$scope.summaryKeywords.keywords[curKey].key+' - ';
           }
-            console.log(keyStr);
+          keyStr = keyStr.substring(0, keyStr.length -3);
           $scope.keyStr = keyStr;
-
-
-
           $scope.showKeywords = !$scope.showKeywords;
-          // $window.alert(JSON.stringify($scope.summaryKeywords));
-
-
-         }, function errorCallback(response) {
-           // called asynchronously if an error occurs
-           // or server returns response with an error status.
-           console.log('server failed')
-         });
-     }
-
-
-       //$scope.summaryKeywords = JSON.parse(summaryKeywords);
+        }, function errorCallback(response) {
+          console.log('server failed');
+        });
+    };
   }])
   .directive('usernameForm', [function() {
     return {

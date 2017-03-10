@@ -17,7 +17,6 @@ module.exports = function(dependencies) {
   var upload = require('../myUpload');
   var transcripts = require('../saveTranscript');
 
-  var resultSummary =  __dirname+'/../../json_summary/'+'conf'+'.json';
   var fs = require('fs-extra');
   if (!fs.existsSync(__dirname+'/../../json_summary/')){
     fs.mkdirSync(__dirname+'/../../json_summary/');
@@ -35,6 +34,7 @@ module.exports = function(dependencies) {
     logger.debug("received summary for meeting %s: %s",
                  req.params['id'], req.body);
 
+    var resultSummary =  __dirname+'/../../json_summary/'+req.params['id']+'.json';
     fs.writeFileSync(resultSummary, JSON.stringify(req.body));
     transcripts.storeIntoOpenP(req.body);
 
@@ -44,21 +44,20 @@ module.exports = function(dependencies) {
   });
 
   //router to send summary data from backend to frontend
-  router.get('/api/summaries/', function(req, res){
-
-    fs.readFile(__dirname+'/../../json_summary/conf.json', 'utf8',function(err,result){
+  router.get('/api/summaries/:id', function(req, res){
+    fs.readFile(__dirname+'/../../json_summary/' + req.params['id'] + '.json', 'utf8',function(err,result){
       if (err){
         console.log('failed');
-        return res.send(404);
+        res.send(404);
+        return;
       }
-      console.log(result);
       //send result data to client
       // var sumaryContent = JSON.stringify(result);
       // console.log('sumaryContent');
       // console.log(sumaryContent);
       res.json(JSON.parse(result));
-    })
-  })
+    });
+  });
 
   return router;
 };
