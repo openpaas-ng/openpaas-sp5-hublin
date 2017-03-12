@@ -150,7 +150,7 @@ module.exports = function(grunt) {
         script: 'server.js',
         options: {
           env: {NODE_ENV: 'dev'},
-          ignore: ['frontend/**', '.git', 'README.md', 'node_modules/**', 'test/**', 'doc/**', 'fixtures/**', 'log/**', 'backend/recorded_audio/**', 'backend/transcript_files/**'],
+          ignore: ['frontend/**', '.git', 'README.md', 'node_modules/**', 'test/**', 'doc/**', 'fixtures/**', 'log/**', 'backend/recorded_audio/**', 'backend/transcript_files/**', 'backend/json_summary/**'],
           watchedExtensions: ['js'],
           callback: function(nodemon) {
             nodemon.on('log', function(event) {

@@ -19,3 +19,4 @@ log/application.log
 log/application.log.*
 backend/recorded_audio/**
 backend/transcript_files/**
+backend/json_summary/**
