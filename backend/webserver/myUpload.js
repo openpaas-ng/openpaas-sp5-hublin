@@ -116,14 +116,9 @@ exports.uploadAudioRecord = function(req, res){
           };
 
           var txtFile = trans_folder+audioName+'.json';
-          // outputContent =  "[" + outputContent + "]";
-          // fs.writeFileSync(txtFile, outputContent);
-          // sendTranscript.send_transcript(confId, JSON.parse(outputContent));
-
-          // Saving a transcription file without using Kaldi
-          var txtDeb = trans_folder+'39_45_eva_14_microsoft.json';
-          fs.writeFileSync(txtFile, fs.readFileSync(txtDeb, 'utf8'));
-          sendTranscript.send_transcript(confId, JSON.parse(fs.readFileSync(txtDeb, 'utf8')));
+          outputContent =  "[" + outputContent + "]";
+          fs.writeFileSync(txtFile, outputContent);
+          sendTranscript.send_transcript(confId, JSON.parse(outputContent));
         };
         ws.onerror = function (event) {
           console.info('ws to stt module error: ' + event);
