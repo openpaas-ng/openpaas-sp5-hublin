@@ -1,11 +1,17 @@
+var config = require('../../config/default.json');
+
 var fs = require('fs-extra');
 var sendTranscript = require('./sendTranscript');
 var Client = require('node-rest-client').Client;
-var client = new Client();
+var client = new Client({
+  connection: {
+    rejectUnauthorized: config.externaTranscriptBackend_forbid_selfsigned_cert
+  }
+});
 
-var KaldiGstreamerURL = require('../../config/default.json').KaldiGstreamerURL;
-var useExternalTranscriptBackend = require('../../config/default.json').useExternalTranscriptBackend;
-var externalTranscriptBackend = require('../../config/default.json').externalTranscriptBackend;
+var KaldiGstreamerURL = config.KaldiGstreamerURL;
+var useExternalTranscriptBackend = config.useExternalTranscriptBackend;
+var externalTranscriptBackend = config.externalTranscriptBackend;
 
 exports.uploadAudioRecord = function(req, res){
 

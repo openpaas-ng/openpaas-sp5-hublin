@@ -142,7 +142,8 @@
   "OpenPaasStore": "http://localhost:8080/api",
   "RecoSummary": "http://localhost:8090/summary",
   "RecoSummaryCallback": "http://localhost:9999/api/summaries"
-  "OnlineRecoWSServer": "ws://localhost:9876",
+  "OnlineRecoWSServer": "wss://localhost:9876",
   "useExternalTranscriptBackend": false,
-  "externalTranscriptBackend": "http://localhost:9877"
+  "externalTranscriptBackend": "https://localhost:9876",
+  "externaTranscriptBackend_forbid_selfsigned_cert": true
 }
