@@ -1,3 +1,4 @@
+var fs = require('fs-extra');
 var sendTranscript = require('./sendTranscript');
 var Client = require('node-rest-client').Client;
 var client = new Client();
@@ -7,41 +8,40 @@ var useExternalTranscriptBackend = require('../../config/default.json').useExter
 var externalTranscriptBackend = require('../../config/default.json').externalTranscriptBackend;
 
 exports.uploadAudioRecord = function(req, res){
-  var fs = require('fs-extra');
-  var file = req.body;
-  var audioName = file.name;
-  var fd = __dirname+'/../recorded_audio/'+audioName+'_raw.wav';
-  // create a directory to store the audio files
+
+  var data = req.body;
+  var audioName = data.name;
+
+  var confId = audioName.split('_')[0];
+  var speaker = audioName.split('_')[1];
+
+  // create directories if needed
   if (!fs.existsSync(__dirname+'/../recorded_audio/')){
     fs.mkdirSync(__dirname+'/../recorded_audio/');
   };
-  // Encoding files in base 64
-  var fileContents = file.contents.split(',').pop();
-  var buf = new Buffer(fileContents, 'base64');
-  fs.writeFile(fd,buf,function(err){
-    transcribe(fd);
-  });
+  if (!fs.existsSync(__dirname+'/../transcript_files/')){
+    fs.mkdirSync(__dirname+'/../transcript_files/');
+  };
 
-  // Create the transcribe function
-  function transcribe(fd){
-    sendRequest(fd, function (err, result) {
-      saveResult(result);
-    });
-  }
-  // Saving the transcription result
-  function saveResult(result){
-    var fs = require('fs-extra');
-    var txtFile = __dirname+'/../transcript_files/'+audioName+'.json';
-    fs.writeFileSync(txtFile,result.hypotheses[0].utterance);
-  };
-  // Preparing files to the transcription step
-  function sendRequest(file, callback){
-    if(!useExternalTranscriptBackend) {
-      sendRequest_internal(file, callback);
-    } else {
-      sendRequest_external(file, callback);
+  // Encoding files in base 64
+  var fileContents = data.contents.split(',').pop();
+  var buf = new Buffer(fileContents, 'base64');
+  var audio_file = __dirname+'/../recorded_audio/'+audioName+'_raw.wav';
+  fs.writeFile(audio_file, new Buffer(fileContents, 'base64'), function(err) {
+
+    function transcript_callback(result){
+      var txtFile = __dirname+'/../transcript_files/'+audioName+'.json';
+      fs.writeFileSync(txtFile, JSON.stringify(result));
+      sendTranscript.send_transcript(confId, result);
     }
-  };
+
+    if(!useExternalTranscriptBackend) {
+      sendRequest_internal(audio_file, transcript_callback);
+    } else {
+      sendRequest_external(audio_file, transcript_callback);
+    }
+
+  });
 
   function sendRequest_external(file, callback){
     var confId = audioName.split('_')[0];
@@ -53,10 +53,7 @@ exports.uploadAudioRecord = function(req, res){
 		client.registerMethod("getTranscript", externalTranscriptBackend+ "/api/transcripts/" + confId , "GET");
 
 		client.methods.getTranscript(args, function (data, response) {
-      var trans_folder = __dirname+'/../transcript_files/';
-      var txtFile = trans_folder+ '/' + audioName + '.json';
-      fs.writeFileSync(txtFile, data);
-      sendTranscript.send_transcript(confId, JSON.parse(data));
+      callback(JSON.parse(data));
 		});
   }
 
@@ -65,6 +62,7 @@ exports.uploadAudioRecord = function(req, res){
     var ffmpeg = require('fluent-ffmpeg');
     var fs = require('fs-extra');
     var request = require('superagent');
+
     ffmpeg.ffprobe(file, function (err, info) {
       var outputfile = __dirname+'/../recorded_audio/'+audioName+'_converted.wav';
       ffmpeg()
@@ -91,14 +89,12 @@ exports.uploadAudioRecord = function(req, res){
           return;
         }
 
-        var confId = audioName.split('_')[0];
-        var speaker = audioName.split('_')[1];
-
         // Opening socket to start transcription
         var W3CWebSocket = require('websocket').w3cwebsocket;
         var ws = new W3CWebSocket(KaldiGstreamerURL + "/client/ws/speech");
-        var transFinal = "";
-        var outputContent = "";
+
+        var outputContent = [];
+
         ws.onopen = function (event) {
           console.info('ws to stt module open');
           ws.send(data);
@@ -107,18 +103,7 @@ exports.uploadAudioRecord = function(req, res){
 
         ws.onclose = function (event) {
           console.info('ws to stt module closed');
-          var fs = require('fs-extra');
-          var TimSort = require('timsort');
-          var trans_folder = __dirname+'/../transcript_files/';
-          // create directory if it does not exists
-          if (!fs.existsSync(trans_folder)){
-            fs.mkdirSync(trans_folder);
-          };
-
-          var txtFile = trans_folder+audioName+'.json';
-          outputContent =  "[" + outputContent + "]";
-          fs.writeFileSync(txtFile, outputContent);
-          sendTranscript.send_transcript(confId, JSON.parse(outputContent));
+          callback(outputContent);
         };
         ws.onerror = function (event) {
           console.info('ws to stt module error: ' + event);
@@ -141,10 +126,12 @@ exports.uploadAudioRecord = function(req, res){
               end = nbSegment + 1; // TODO set the actual duration
             }
 
-            if (outputContent !== "") {
-              outputContent = outputContent + ',\n';
-            }
-            outputContent += "{"+"\""+"from"+"\""+": "+start+", "+"\""+"until"+"\""+": "+end+", "+"\""+"speaker"+"\""+": "+"\""+speaker+"\""+", "+"\""+"text"+"\": \""+trans+"\""+"}";
+            outputContent.push({
+              from: start,
+              until: end,
+              speaker: speaker,
+              text: trans
+            });
 
             nbSegment += 1;
           }
