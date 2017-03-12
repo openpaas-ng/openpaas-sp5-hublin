@@ -246,6 +246,7 @@ angular.module('op.live-conference', [
           webRTCService.connect($scope.conferenceState, function(){
             mediaRecorder.startRecording(webRTCService.getLocalStream());
             liveTranscriber.open($scope.conferenceId,
+                                 userService.getDisplayName(),
                                  webRTCService.getLocalStream(),
                                  9000,
                                  function(msg) {
@@ -422,6 +423,7 @@ angular.module('op.live-conference', [
   var mediaRecorder;
   var chunks = [];
   var confId;
+  var userId;
   var recordInterval;
   var pause = false;
 
@@ -434,7 +436,12 @@ angular.module('op.live-conference', [
       var reader = new FileReader();
       reader.readAsDataURL(blob);
       reader.onload = function(e){
-        myWS.send(JSON.stringify({confId: confId, type: 'audioData', audioContent: e.target.result}));
+        myWS.send(JSON.stringify({
+          confId: confId,
+          userId: userId,
+          type: 'audioData',
+          audioContent: e.target.result
+        }));
         $log.debug('online reco: sent data to provider');
       };
     }
@@ -468,8 +475,9 @@ angular.module('op.live-conference', [
   }
 
   return {
-    open: function(conferenceId, mediaStream, interval, callback) {
+    open: function(conferenceId, usrId, mediaStream, interval, callback) {
       confId = conferenceId;
+      userId = usrId;
       $http({
         method: 'GET',
         url: '/api/transcriptprovider'
