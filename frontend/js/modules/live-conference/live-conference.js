@@ -527,15 +527,25 @@ angular.module('op.live-conference', [
       var notif_content = '';
 
       recommendation = JSON.parse(recommendation);
-      notif_content += '<h5>keywords</h5> ';
-      for (var keyword in recommendation.keywords) {
-        notif_content += keyword + ', ';
+
+      if(recommendation.keywords && recommendation.keywords.length > 0) {
+        notif_content += '<h5>mots clés</h5> ';
+        for (var i = 0; i < recommendation.keywords.length; i++){
+          notif_content += recommendation.keywords[i].key + ', ';
+        }
+        // remove last ', '
+        notif_content = notif_content.substring(0, notif_content.length - 2);
       }
-      // remove last ', '
-      notif_content = notif_content.substring(0, notif_content.length - 2);
+
+      if(recommendation.wikiarticles && recommendation.wikiarticles.length > 0) {
+        notif_content += '<h5>Wikipedia</h5>';
+        for(var i = 0; i < recommendation.wikiarticles.length && i < 5; i++) {
+          notif_content += '<p><a href=\'' + recommendation.wikiarticles[i].link + '\' target=\'_blank\'>' + recommendation.wikiarticles[i].title + '</a>'; 
+        }
+      }
 
       if(recommendation.soArticles && recommendation.soArticles.length > 0) {
-        notif_content += '<h5>Recommendations</h5>';
+        notif_content += '<h5>StackOverflow</h5>';
         var articles = recommendation.soArticles;
         for(var i = 0; i < articles.length && i < 5; i++) {
           notif_content += '<p><a href=\'' + recommendation.soArticles[i].link + '\' target=\'_blank\'>' + recommendation.soArticles[i].title + '</a>'; 
