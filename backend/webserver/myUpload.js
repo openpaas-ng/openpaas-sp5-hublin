@@ -13,10 +13,38 @@ var KaldiGstreamerURL = config.KaldiGstreamerURL;
 var useExternalTranscriptBackend = config.useExternalTranscriptBackend;
 var externalTranscriptBackend = config.externalTranscriptBackend;
 
+function mergeTranscripts(confId) {
+
+  var trans_folder = __dirname+'/../transcript_files/';
+  var files = fs.readdirSync(trans_folder);
+
+  var combinedTranscript = [];
+  var uniqueChunks = [];
+
+  files.filter(
+    (file) => file.split('/').slice(-1)[0].startsWith(confId + '_'))
+    .forEach(function(file) {
+      var data = fs.readFileSync(trans_folder + file);
+      var chunks = JSON.parse(data);
+      for(var i = 0; i < chunks.length; i++) {
+        var chunk = chunks[i];
+        var chunkKey = chunk.from + '_' + chunk.until + '_' + chunk.speaker + '_' + chunk.text;
+        if(!uniqueChunks.includes(chunkKey)){
+          uniqueChunks.push(chunkKey);
+          combinedTranscript.push(chunk);
+        }
+      }
+    });
+
+  return combinedTranscript;
+}
+
 exports.uploadAudioRecord = function(req, res){
 
   var data = req.body;
   var audioName = data.name;
+
+  var confIsFinished = data.nbParticipantsLeft == 0;
 
   var confId = audioName.split('_')[0];
   var speaker = audioName.split('_')[1];
@@ -38,7 +66,18 @@ exports.uploadAudioRecord = function(req, res){
     function transcript_callback(result){
       var txtFile = __dirname+'/../transcript_files/'+audioName+'.json';
       fs.writeFileSync(txtFile, JSON.stringify(result));
-      sendTranscript.send_transcript(confId, result);
+
+      if(confIsFinished) {
+        // merge all the transcripts of the different participants
+        var combined = mergeTranscripts(confId);
+
+        // save combined transcript to disk
+        var combinedFile = __dirname+'/../transcript_files/'+confId+'.json';
+        fs.writeFile(combinedFile, JSON.stringify(combined));
+
+        // send combined transcript
+        sendTranscript.send_transcript(confId, combined);
+      }
     }
 
     if(!useExternalTranscriptBackend) {
