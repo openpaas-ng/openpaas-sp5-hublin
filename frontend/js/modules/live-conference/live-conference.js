@@ -160,8 +160,18 @@ angular.module('op.live-conference', [
         $log.debug('Leaving the conference');
 
         mediaRecorder.stopRecording(function(data){
+
+          // compute actual number of attendees lefts
+          var nbAttendees = 0;
+          for(var i=0; i < $scope.conferenceState.attendees.length; i++) {
+            if($scope.conferenceState.attendees[i] != null) {
+              nbAttendees += 1;
+            }
+          }
+
           var audioData = {
             name: session.conference._id + '_' + userService.getDisplayName(),
+            nbParticipantsLeft: nbAttendees - 1,
             type: 'audio/wav',
             contents: data
           };
