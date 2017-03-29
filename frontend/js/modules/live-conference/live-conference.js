@@ -258,7 +258,7 @@ angular.module('op.live-conference', [
             liveTranscriber.open($scope.conferenceId,
                                  userService.getDisplayName(),
                                  webRTCService.getLocalStream(),
-                                 9000,
+                                 20,
                                  function(msg) {
                                    recommendationHandler.processRecommendation(msg.data);
                                    console.log('> ' + userService.getDisplayName() + ': ' + msg.data);
@@ -457,31 +457,16 @@ angular.module('op.live-conference', [
     }
   }
 
-  function recordLoop() {
-    recordAtInterval = window.setInterval(function(){
-      mediaRecorder.stop();
-      if(!pause) {
-        mediaRecorder.start();
-      }
-    }, recordInterval);
-  }
-
   function processAudio(stream, interval) {
     mediaRecorder = new MediaRecorder(stream);
-    recordInterval = interval;
 
     mediaRecorder.ondataavailable = function(e) {
-      chunks.push(e.data);
+      myWS.send(e.data);
+      $log.debug('online reco: sent data to provider');
     };
 
-    mediaRecorder.onstop = function(e) {
-      sendAudioToServer();
-    };
-
-    mediaRecorder.start();
+    mediaRecorder.start(interval);
     $log.debug('online reco: started recording');
-
-    recordLoop();
   }
 
   return {
@@ -496,12 +481,12 @@ angular.module('op.live-conference', [
         myWS = new WebSocket(providerurl.data);
         myWS.onopen = function(e) {
           myWS.send(JSON.stringify({confId: confId, type: 'register'}));
+          processAudio(mediaStream, interval);
         };
         myWS.onmessage = function(e) {
           $log.debug('online reco: received %j', e);
           callback(e);
         };
-        processAudio(mediaStream, interval);
       });
     },
     pause: function() {
