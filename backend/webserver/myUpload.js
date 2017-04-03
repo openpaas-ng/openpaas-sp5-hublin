@@ -134,6 +134,8 @@ exports.uploadAudioRecord = function(req, res){
           return;
         }
 
+        var tryAgain = false;
+
         // Opening socket to start transcription
         var W3CWebSocket = require('websocket').w3cwebsocket;
         var ws = new W3CWebSocket(KaldiGstreamerURL + "/client/ws/speech");
@@ -148,7 +150,15 @@ exports.uploadAudioRecord = function(req, res){
 
         ws.onclose = function (event) {
           console.info('ws to stt module closed');
-          callback(outputContent);
+
+          if (tryAgain){
+            // wait 3s and try again
+            setTimeout(function(){
+              transcribeClip(clip, done);
+            }, 3000);
+          } else {
+            callback(outputContent);
+          }
         };
         ws.onerror = function (event) {
           console.info('ws to stt module error: ' + event);
@@ -158,6 +168,12 @@ exports.uploadAudioRecord = function(req, res){
         ws.onmessage = function (event) {
           console.log(event.data);
           var hyp = JSON.parse(event.data);
+
+          if (hyp["status"] == 9){
+            // no worker available, try again
+            tryAgain = true;
+          }
+
           if (hyp["result"]!= undefined && hyp["result"]["final"]){
             var trans = ((hyp["result"]["hypotheses"])[0])["transcript"];
 
