@@ -255,14 +255,40 @@ angular.module('op.live-conference', [
         if (video) {
           webRTCService.connect($scope.conferenceState, function(){
             mediaRecorder.startRecording(webRTCService.getLocalStream());
+
+            var errorReceived = false;
+            var liveTranscriberMsgCallback = function(msg) {
+              msg = JSON.parse(msg.data);
+              switch (msg.type) {
+              case 'recommendation':
+                recommendationHandler.processRecommendation(msg);
+                console.log('> ' + userService.getDisplayName() + ': ' + msg);
+                break;
+              case 'error':
+                if(!errorReceived) {
+                  errorReceived = true;
+                  $log.error('live transcriber: received error, retrying in 2000ms');
+                  liveTranscriber.close();
+                  setTimeout(() => {
+                    errorReceived = false;
+                    liveTranscriber.open($scope.conferenceId,
+                                         userService.getDisplayName(),
+                                         webRTCService.getLocalStream(),
+                                         20,
+                                         liveTranscriberMsgCallback);
+                  }, 2000);
+                }
+                break;
+              default:
+                $log.error('live transcriber: received unexpected message %j', msg);
+              }
+            };
+
             liveTranscriber.open($scope.conferenceId,
                                  userService.getDisplayName(),
                                  webRTCService.getLocalStream(),
                                  20,
-                                 function(msg) {
-                                   recommendationHandler.processRecommendation(msg.data);
-                                   console.log('> ' + userService.getDisplayName() + ': ' + msg.data);
-                                 });
+                                 liveTranscriberMsgCallback);
           });
           unregisterLocalVideoWatch();
         }
