@@ -506,7 +506,7 @@ angular.module('op.live-conference', [
         $log.debug('online reco: opening socket to provider');
         myWS = new WebSocket(providerurl.data);
         myWS.onopen = function(e) {
-          myWS.send(JSON.stringify({confId: confId, type: 'register'}));
+          myWS.send(JSON.stringify({confId: confId, type: 'register', userId: userId}));
           processAudio(mediaStream, interval);
         };
         myWS.onmessage = function(e) {
