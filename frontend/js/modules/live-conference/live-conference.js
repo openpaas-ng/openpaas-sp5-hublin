@@ -547,8 +547,6 @@ angular.module('op.live-conference', [
 
       var notif_content = '';
 
-      recommendation = JSON.parse(recommendation);
-
       if(recommendation.keywords && recommendation.keywords.length > 0) {
         notif_content += '<h5>mots clés</h5> ';
         for (var i = 0; i < recommendation.keywords.length; i++){
