@@ -183,8 +183,9 @@ exports.uploadAudioRecord = function(req, res){
               start = JSON.parse(hyp["segment-start"]);
               end = parseFloat(hyp["segment-start"])+parseFloat(hyp["segment-length"]);
             } else {
-              start = nbSegment; // TODO set the actual start
-              end = nbSegment + 1; // TODO set the actual duration
+              const time = new Date().getTime()/1000;
+              start = time; // TODO set the actual start
+              end = time + 1; // TODO set the actual duration
             }
 
             outputContent.push({
