@@ -274,7 +274,7 @@ angular.module('op.live-conference', [
                     liveTranscriber.open($scope.conferenceId,
                                          userService.getDisplayName(),
                                          webRTCService.getLocalStream(),
-                                         20,
+                                         150,
                                          liveTranscriberMsgCallback);
                   }, 2000);
                 }
@@ -287,7 +287,7 @@ angular.module('op.live-conference', [
             liveTranscriber.open($scope.conferenceId,
                                  userService.getDisplayName(),
                                  webRTCService.getLocalStream(),
-                                 20,
+                                 150,
                                  liveTranscriberMsgCallback);
           });
           unregisterLocalVideoWatch();
